@@ -649,10 +649,28 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        sessionId: sessionId,
-                        message: message,
-                        timestamp: new Date().toISOString()
-                    })
+    body: {
+        sessionId: sessionId,
+        message: message,
+        timestamp: new Date().toISOString()
+    }
+})
+```
+
+**OR better yet**, let's simplify n8n instead:
+
+---
+
+## ✅ Easier Fix: Update n8n to Match Current Format
+
+In your **Website ChatBot** node, change the Prompt to just:
+```
+{{ $json.message }}
+```
+
+Instead of:
+```
+{{ $json.body.message }}
                 });
 
                 const data = await response.json();
