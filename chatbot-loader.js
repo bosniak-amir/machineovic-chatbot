@@ -1,11 +1,7 @@
 (function() {
-  // Chatbot Loader Script - Machineovic
-  const chatbotUrl = 'https://bosniak-amir.github.io/Machineovic-Chatbot/';
-  
-  // Create iframe
   const iframe = document.createElement('iframe');
-  iframe.id = 'machineovic-chatbot-iframe';
-  iframe.src = chatbotUrl;
+  iframe.id = 'machineovic-chatbot';
+  iframe.src = 'https://bosniak-amir.github.io/machineovic-chatbot/';
   iframe.style.cssText = `
     position: fixed !important;
     bottom: 0 !important;
@@ -18,28 +14,23 @@
     background: transparent !important;
   `;
   
-  // Add to page
   if (document.body) {
     document.body.appendChild(iframe);
   } else {
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
       document.body.appendChild(iframe);
     });
   }
   
-  // Make clickable in bottom-right corner
-  document.addEventListener('mousemove', (e) => {
-    const chatArea = e.clientX > window.innerWidth - 500 && 
-                     e.clientY > window.innerHeight - 700;
-    iframe.style.pointerEvents = chatArea ? 'all' : 'none';
+  document.addEventListener('mousemove', function(e) {
+    const inChatArea = e.clientX > window.innerWidth - 500 && e.clientY > window.innerHeight - 700;
+    iframe.style.pointerEvents = inChatArea ? 'all' : 'none';
   });
   
-  // Also make clickable on touch devices
-  document.addEventListener('touchstart', (e) => {
+  document.addEventListener('touchstart', function(e) {
     const touch = e.touches[0];
-    const chatArea = touch.clientX > window.innerWidth - 500 && 
-                     touch.clientY > window.innerHeight - 700;
-    if (chatArea) iframe.style.pointerEvents = 'all';
+    const inChatArea = touch.clientX > window.innerWidth - 500 && touch.clientY > window.innerHeight - 700;
+    if (inChatArea) iframe.style.pointerEvents = 'all';
   });
   
   console.log('✅ Machineovic Chatbot loaded successfully');
