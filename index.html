@@ -661,8 +661,28 @@
                 typingIndicator.classList.remove('active');
 
                 // Add bot response
-                const botMessage = data.response || data.message || 'Sorry, I could not process your request.';
-                addMessage(botMessage, 'bot');
+                // Add bot response - handle different response formats
+let botMessage = 'Sorry, I could not process your request.';
+
+if (data.response) {
+    botMessage = data.response;
+} else if (data.message) {
+    botMessage = data.message;
+} else if (data.output) {
+    botMessage = data.output;
+} else if (data.text) {
+    botMessage = data.text;
+} else if (typeof data === 'string') {
+    botMessage = data;
+} else {
+    // If it's an object, try to get the first text value
+    const firstValue = Object.values(data)[0];
+    if (typeof firstValue === 'string') {
+        botMessage = firstValue;
+    }
+}
+
+addMessage(botMessage, 'bot');
 
             } catch (error) {
                 console.error('Error:', error);
