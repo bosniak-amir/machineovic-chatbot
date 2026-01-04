@@ -655,24 +655,50 @@
                     })
                 });
 
-                const data = await response.json();
-                
                 // Hide typing indicator
                 typingIndicator.classList.remove('active');
 
-                // Add bot response - handle different formats
+                // IMPROVED: Better response handling
                 let botMessage = 'Sorry, I could not process your request.';
                 
-                if (data.response) {
-                    botMessage = data.response;
-                } else if (data.message) {
-                    botMessage = data.message;
-                } else if (data.output) {
-                    botMessage = data.output;
-                } else if (data.text) {
-                    botMessage = data.text;
-                } else if (typeof data === 'string') {
-                    botMessage = data;
+                // First, try to parse as JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    
+                    // Log the full response for debugging
+                    console.log('Webhook response:', data);
+                    
+                    // Try different possible response formats
+                    if (typeof data === 'string') {
+                        botMessage = data;
+                    } else if (data.response) {
+                        botMessage = data.response;
+                    } else if (data.message) {
+                        botMessage = data.message;
+                    } else if (data.output) {
+                        botMessage = data.output;
+                    } else if (data.text) {
+                        botMessage = data.text;
+                    } else if (data.result) {
+                        botMessage = data.result;
+                    } else if (data.reply) {
+                        botMessage = data.reply;
+                    } else if (data.answer) {
+                        botMessage = data.answer;
+                    } else {
+                        // If none of the above, stringify the whole object for debugging
+                        console.warn('Unexpected response format:', data);
+                        botMessage = 'Received unexpected response format. Check console for details.';
+                    }
+                } else {
+                    // If not JSON, try reading as text
+                    const textResponse = await response.text();
+                    console.log('Text response:', textResponse);
+                    
+                    if (textResponse) {
+                        botMessage = textResponse;
+                    }
                 }
                 
                 addMessage(botMessage, 'bot');
