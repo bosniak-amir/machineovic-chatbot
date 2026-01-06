@@ -551,8 +551,9 @@
     </div>
 
     <script>
-        // Configuration - UPDATE YOUR WEBHOOK URL HERE!
+        // Configuration - YOUR WEBHOOK URL
         const CONFIG = {
+            // IMPORTANT: Use the PRODUCTION webhook URL from your n8n workflow
             webhookUrl: 'https://n8n.srv1186643.hstgr.cloud/webhook/046374d4-0a82-4235-aa5d-844224df3151/chat',
             botName: 'Machineovic 24/7 Agent',
             shortcuts: [
@@ -612,35 +613,8 @@
 
         // Start conversation with welcome message
         async function startConversation() {
-            typingIndicator.classList.add('active');
-            scrollToBottom();
-
-            try {
-                const response = await fetch(CONFIG.webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: "loadPreviousSession",
-                        sessionId: sessionId,
-                        metadata: { userId: "" }
-                    })
-                });
-
-                typingIndicator.classList.remove('active');
-
-                const data = await response.json();
-                console.log('Initial response:', data);
-
-                // Add welcome message with shortcuts embedded
-                addWelcomeMessageWithShortcuts();
-
-            } catch (error) {
-                console.error('Error starting conversation:', error);
-                typingIndicator.classList.remove('active');
-                addWelcomeMessageWithShortcuts();
-            }
+            // Just show welcome message without calling the webhook
+            addWelcomeMessageWithShortcuts();
         }
 
         function addWelcomeMessageWithShortcuts() {
@@ -697,34 +671,47 @@
             scrollToBottom();
 
             try {
-                // FIXED: Use correct n8n format
+                console.log('Sending to n8n:', {
+                    sessionId: sessionId,
+                    chatInput: message
+                });
+
+                // CRITICAL FIX: Send EXACTLY what n8n "When chat message received" expects
+                // No "action" field - just sessionId and chatInput
                 const response = await fetch(CONFIG.webhookUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        action: "sendMessage",
                         sessionId: sessionId,
-                        chatInput: message,
-                        metadata: { userId: "" }
+                        chatInput: message
                     })
                 });
 
                 typingIndicator.classList.remove('active');
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
                 console.log('Webhook response:', data);
                 
-                // FIXED: Parse response correctly
-                const botMessage = Array.isArray(data) ? data[0].output : data.output;
+                // Parse response - handle both array and object responses
+                let botMessage;
+                if (Array.isArray(data)) {
+                    botMessage = data[0]?.output || data[0]?.message || 'Sorry, I received an empty response.';
+                } else {
+                    botMessage = data.output || data.message || 'Sorry, I received an empty response.';
+                }
                 
                 addMessage(botMessage, 'bot');
 
             } catch (error) {
                 console.error('Error:', error);
                 typingIndicator.classList.remove('active');
-                addMessage('Sorry, I couldn\'t reach the server. Please try again.', 'bot');
+                addMessage('Sorry, I couldn\'t reach the server. Please try again later.', 'bot');
             }
 
             chatSend.disabled = false;
@@ -782,6 +769,7 @@
         scrollToBottom();
         
         console.log('✅ Machineovic Chatbot loaded successfully');
+        console.log('Session ID:', sessionId);
     </script>
 
 </body>
